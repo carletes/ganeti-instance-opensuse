@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+.*.swp
+/aclocal.m4
+/autom4te.cache
+/autotools
+/common.sh
+/config.log
+/config.status
+/configure
+/ganeti-instance-opensuse-*.tar.gz

@@ -1,0 +1,38 @@
+# ganeti-instance-opensuse defaults file
+
+# If you want to change from the default of installing OpenSuSE 11.1
+# on the next instance, customize this file before the instance
+# installation
+
+# PROXY: If non-null, use this as an HTTP proxy.
+# PROXY="http://proxy.example.com:3128/"
+
+# MIRROR: URL of OpenSuSE mirro to use.
+# MIRROR="http://download.opensuse.org"
+
+# VERSION: OpenSuSE version to install.
+# VERSION="11.1"
+
+# CUSTOMIZE_DIR: A directory containing scripts to customize the installation.
+# The scripts are executed using chroot.
+# CUSTOMIZE_DIR="/etc/ganeti/instance-opensuse.d"
+
+# GENERATE_CACHE: If set to yes (the default), create new cache files;
+# any other value will disable the generation of cache files (but they
+# will still be used if they exist).
+GENERATE_CACHE="yes"
+
+# CLEAN_CACHE: Should be set to the number of days after which to
+# clean the cache; the default is 14 (two weeks); to disable cache
+# cleaning, set it to an empty value ("")
+CLEAN_CACHE="14"
+
+# PARTITION_STYLE: whether and how the target device should be partitioned.
+# Allowed values:
+# 'none': Just format the device, but don't partition it.
+# 'msdos': Install an MS-DOS partition table on the device, with a single
+#          partition on it.
+# (More styles may be added in the future)
+# The default is "msdos" from ganeti 2.0 onwards, but none if installing under
+# Ganeti 1.2 (os api version 5)
+# PARTITION_STYLE="none"

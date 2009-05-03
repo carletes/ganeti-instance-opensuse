@@ -1,0 +1,50 @@
+#! /bin/sh
+#
+# Copyright (c) 2001-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/ganeti-hostname
+#
+### BEGIN INIT INFO
+# Provides:          ganeti-hostname
+# Required-Start:    boot.cleanup
+# Required-Stop:     $null
+# Default-Start:     2 3 5
+# Default-Stop:
+# Short-Description: Setup hostname as required by ganeti
+# Description:       Setup hostname as required by ganeti
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/cron
+
+rc_reset
+
+case "$1" in
+  start)
+	XHOSTNAME=""
+	test -f /etc/HOSTNAME && {
+	    XHOSTNAME=`cat /etc/HOSTNAME`
+	}
+	test -n "$XHOSTNAME" && {
+	    echo -n Setting up hostname \'${XHOSTNAME}\'
+	    hostname ${XHOSTNAME}
+	    rc_status -v -r
+	}
+	unset XHOSTNAME
+	;;
+    stop|restart)
+        # skip / nothing to do
+	;;
+    status)
+	rc_failed 4
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+	;;
+esac
+
+rc_exit
+	

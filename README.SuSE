@@ -1,0 +1,167 @@
+Running ganeti on SuSE systems
+==============================
+
+The following tips complement the installation instructions on
+http://ganeti-doc.googlecode.com/svn/ganeti-2.0/install.html for SuSE
+systems. These tips have been written with OpenSuSE 11.1, but might as well
+apply to other SuSE flavours.
+
+Hostname issues
+---------------
+SuSE strips the domain part of the host name very early at boot time (see
+/etc/init.d/boot.localnet), but ganeti requires the output of 'hostname'
+to be fully qualified. The sample file 'init.d/ganeti-hostname' fixes this.
+
+The Debian tip box about the contents of '/etc/hosts' also applies.
+
+Installing Xen
+--------------
+Easy on OpenSuSE 11.1:
+
+    # zypper install xen xen-tools kernel-xen
+
+Xen settings
+------------
+OpenSuSE 11.1 expects the Xen virtual machine configuration files to be stored
+under '/etc/xen/vm', but ganeti will put them under '/etc/xen'. A quick and
+dirty workaround:
+
+    # cd /etc/xen
+    # mv vm/* .
+    # rmdir vm
+    # ln -s . vm
+
+You will also have to enable some stuff in '/etc/xen/xend-config.sxp'.
+Here is a diff against the default version installed by OpenSuSE 11.1:
+
+--- /etc/xen/xend-config.sxp.dist       2009-05-01 17:36:51.000000000 +0000
++++ /etc/xen/xend-config.sxp    2009-05-01 17:40:07.000000000 +0000
+@@ -52,14 +52,15 @@
+ # Default:
+ #   (xen-api-server ((unix)))
+ 
++(xen-api-server ((9363 none)))
+ 
+-#(xend-http-server no)
++(xend-http-server yes)
+ (xend-unix-server yes)
+-#(xend-tcp-xmlrpc-server no)
+-#(xend-unix-xmlrpc-server yes)
++(xend-tcp-xmlrpc-server yes)
++(xend-unix-xmlrpc-server yes)
+ # Only enable xend-relocation-server on trusted networks as it lacks
+ # encryption and authentication.
+-#(xend-relocation-server no)
++(xend-relocation-server yes)
+ #(xend-relocation-ssl-server no)
+ 
+ #(xend-unix-path /var/lib/xend/xend-socket)
+@@ -120,7 +121,7 @@
+ #  (xend-relocation-hosts-allow '^localhost$ ^.*\\.example\\.org$')
+ #
+ #(xend-relocation-hosts-allow '')
+-(xend-relocation-hosts-allow '^localhost$ ^localhost\\.localdomain$')
++#(xend-relocation-hosts-allow '^localhost$ ^localhost\\.localdomain$')
+ 
+ # The limit (in kilobytes) on the size of the console buffer
+ #(console-limit 1024)
+@@ -188,15 +189,15 @@
+ # dom0-min-mem is the lowest permissible memory level (in MB) for dom0.
+ # This is a minimum both for auto-ballooning (as enabled by
+ # enable-dom0-ballooning below) and for xm mem-set when applied to dom0.
+-(dom0-min-mem 512)
++(dom0-min-mem 0)
+ 
+ # Whether to enable auto-ballooning of dom0 to allow domUs to be created.
+ # If enable-dom0-ballooning = no, dom0 will never balloon out.
+-(enable-dom0-ballooning yes)
++(enable-dom0-ballooning no)
+ 
+ # In SMP system, dom0 will use dom0-cpus # of CPUS
+ # If dom0-cpus = 0, dom0 will take all cpus available
+-(dom0-cpus 0)
++(dom0-cpus 1)
+ 
+ # Whether to enable core-dumps when domains crash.
+ #(enable-dump no)
+
+Installing DRBD
+---------------
+Easy on OpenSuSE 11.1:
+
+    # zypper install drbd drbd-kmp-xen
+
+Make sure your DRBD version includes the stack smashing fixes from
+https://bugzilla.novell.com/show_bug.cgi?id=450883
+
+You will also need to apply Karsten Keil's patch from
+http://groups.google.com/group/ganeti/browse_thread/thread/4f1f69540c2b1316 to
+the source code of ganeti, reinstall it and then restart ganeti on all your
+nodes.
+
+Other required software
+-----------------------
+These are the required RPMs on OpenSuSE 11.1:
+
+    # zypper install lvm2 openssl openssh bridge-utils iproute2 python \
+        python-openssl
+
+I could not find RPMs for two of the required Python packages (simplejson and
+and pyOpenSSL). Installing them from PyPI, however, is straightforward:
+
+    # zypper install gcc python-setuptools
+    # easy_install pyparsing simplejson pyopenssl
+
+You may also want to install docutils and docbook-utils, so that HTML
+documentation and man pages get generated:
+
+    # zypper install docutils docbook-utils
+
+If you want to rebuild the ganeti documentation, you probably want to install
+graphviz as well:
+
+    # zypper install graphviz
+
+Configuring the network
+-----------------------
+Stick to YaST2, unless you know what you are doing.
+
+Installing Ganeti
+-----------------
+The following invocation of 'configure' will do the job on OpenSuSE 11.1
+nodes:
+
+    # env RST2HTML=/usr/bin/rst2html.py \
+       ./configure --localstatedir=/var --sysconfdir=/etc \
+          --with-ssh-initscript=/etc/init.d/sshd
+
+The file 'init.d/ganeti' can be copied to '/etc/init.d' and enabled with
+the command 'chkconfig' or via YaST.
+
+Installing the Operating System support packages
+------------------------------------------------
+You need makedev, dump (and restore) and kpartx:
+
+    # zypper install makedev dump kpartx
+
+This invocation of 'configure' will then do the job on OpenSuSE 11.1 systems:
+
+    # ./configure --localstatedir=/var --sysconfdir=/etc \
+        --with-os-dir=/srv/ganeti/os
+
+Initializing the cluster
+------------------------
+On OpenSuSE 11.1 systems you may need to take the following into account:
+
+    * The default domU kernel is '/boot/vmlinuz-xen', and its initrd is
+      '/boot/initrd-xen'.
+    * The default bridge device as configured by YaST2 is 'br0'.
+    * You may need to pass 'xencons=tty' to the kernel.
+
+The following invocation of 'gnt-cluster' does just that:
+
+    # gnt-cluster init \
+        --bridge=br0 \
+        --master-netdev=br0 \
+        --hypervisor-parameters=xen-pvm:kernel_path=/boot/vmlinuz-xen,initrd_path=/boot/initrd-xen,kernel_args=xencons=tty \
+        <CLUSTERNAME>
