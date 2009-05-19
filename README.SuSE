@@ -110,7 +110,7 @@ I could not find RPMs for two of the required Python packages (simplejson and
 and pyOpenSSL). Installing them from PyPI, however, is straightforward:
 
     # zypper install gcc python-setuptools
-    # easy_install pyparsing simplejson pyopenssl
+    # easy_install pyparsing simplejson
 
 You may also want to install docutils and docbook-utils, so that HTML
 documentation and man pages get generated:
